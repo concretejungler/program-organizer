@@ -3,6 +3,7 @@ import sys
 import socket
 import threading
 import webbrowser
+import logging
 from flask import Flask, jsonify, request, send_from_directory, send_file
 
 from database import Database
@@ -255,6 +256,15 @@ def create_app(db_path=None, programs_dir=None, testing=False):
 
 
 def main():
+    # Suppress Flask/werkzeug request logging
+    log = logging.getLogger("werkzeug")
+    log.setLevel(logging.ERROR)
+
+    # When running as compiled exe, redirect stdout/stderr to devnull
+    if getattr(sys, "frozen", False):
+        sys.stdout = open(os.devnull, "w")
+        sys.stderr = open(os.devnull, "w")
+
     port = find_free_port()
     app = create_app()
 
@@ -273,7 +283,6 @@ def main():
     # Open browser
     threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{port}")).start()
 
-    print(f"Program Organizer running at http://localhost:{port}")
     app.run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
 
 
